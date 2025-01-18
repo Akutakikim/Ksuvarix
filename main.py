@@ -17,6 +17,9 @@ users_collection = db["users"]
 # Flask App for Web API
 flask_app = Flask(__name__)
 
+# Bot Version
+BOT_VERSION = "ZATHAIX Bot v-1.3.12"
+
 # Helper Functions
 def register_user(user_id):
     """Register a user in MongoDB."""
@@ -58,7 +61,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     welcome_text = (
-        "Hello! I am **ZATHAIX**, your assistant for movies and series.\n\n"
+        f"Hello! I am **{BOT_VERSION}**, your assistant for movies and series.\n\n"
         "**Owner:** Contact @YourUsername\n"
         "**Support:** [Telegram Support](https://t.me/support)\n"
         "**Help:** Type a movie title to search for it."
@@ -92,7 +95,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     if query.data.startswith("movie_"):
-        movie_name = query.data.split("_")[1]
+        movie_name = query.data.split("_", 1)[1]
         movie = movies_collection.find_one({"movie": movie_name})
         if movie:
             text = (
@@ -101,17 +104,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"**Rating**: {movie['rating']}\n\n"
                 f"[Download Here]({movie['Terabox']})"
             )
-            keyboard = [
-                [InlineKeyboardButton("⬅️ Back", callback_data="back_to_movies")]
-            ]
+            keyboard = [[InlineKeyboardButton("⬅️ Back", callback_data="back_to_movies")]]
             reply_markup = InlineKeyboardMarkup(keyboard)
             await query.message.reply_text(text, parse_mode="Markdown", reply_markup=reply_markup)
         else:
             await query.message.reply_text("Movie not found.")
 
     elif query.data == "back_to_movies":
-        # Example: Returning to a previous list of movies
-        results = movies_collection.find().limit(10)  # Fetch movies
+        results = movies_collection.find().limit(10)
         keyboard = [[InlineKeyboardButton(movie["movie"], callback_data=f"movie_{movie['movie']}")] for movie in results]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await query.message.reply_text("Select a movie:", reply_markup=reply_markup)
@@ -121,7 +121,7 @@ async def show_favorites(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     favorites = get_user_favorites(user_id)
     if favorites:
-        await update.message.reply_text(f"Your favorites:\n{'\n'.join(favorites)}")
+        await update.message.reply_text("Your favorites:\n" + "\n".join(favorites))
     else:
         await update.message.reply_text("You have no favorite movies yet!")
 
@@ -130,91 +130,21 @@ async def show_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     history = get_user_history(user_id)
     if history:
-        await update.message.reply_text(f"Your search history:\n{'\n'.join(history)}")
+        await update.message.reply_text("Your search history:\n" + "\n".join(history))
     else:
         await update.message.reply_text("You have no search history yet!")
 
 async def show_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show a list of all inline keyboard commands."""
+    """Show available commands."""
     commands_text = (
-        "Here are the available commands and their descriptions:\n\n"
-        "- **Inline Commands:**\n"
-        "  • `movie_<movie_name>`: Select a movie to view details.\n"
-        "  • `back_to_movies`: Return to the movie list.\n"
-        "\n- **Text Commands:**\n"
-        "  • `/start`: Start the bot.\n"
-        "  • `/commands`: Show this command list.\n"
-        "  • `/f`: View your favorite movies.\n"
-        "  • `/h`: View your search history.\n"
-        "  • `/notify`: Admin command to notify all users."
+        f"Here are the available commands for {BOT_VERSION}:\n\n"
+        "- `/start`: Start the bot.\n"
+        "- `/commands`: Show this command list.\n"
+        "- `/f`: View your favorite movies.\n"
+        "- `/h`: View your search history.\n"
+        "- `/notify`: Admin command to notify all users (admins only).\n"
     )
-
     await update.message.reply_text(commands_text, parse_mode="Markdown")
-
-async def notify_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Admin command to notify all users."""
-    user_id = update.message.from_user.id
-    if user_id != ADMIN_USER_ID:
-        await update.message.reply_text("You are not authorized to use this command.")
-        return
-
-    message = " ".join(context.args)
-    users = users_collection.find()
-    for user in users:
-        try:
-            await context.bot.send_message(chat_id=user["user_id"], text=message)
-        except Exception as e:
-            logging.warning(f"Failed to notify user {user['user_id']}: {e}")
-
-    await update.message.reply_text("Notification sent to all users!")
-
-# Flask Routes for Web API
-@flask_app.route("/api/search", methods=["GET"])
-def api_search():
-    """Search for movies."""
-    query = request.args.get("query", "").strip()
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
-
-    results = search_movies(query)
-    return jsonify(results)
-
-@flask_app.route("/api/favorites", methods=["POST"])
-def api_add_favorite():
-    """Add a movie to the user's favorites."""
-    data = request.json
-    user_id = data.get("user_id")
-    movie_name = data.get("movie")
-
-    if not user_id or not movie_name:
-        return jsonify({"error": "user_id and movie are required"}), 400
-
-    add_to_favorites(user_id, movie_name)
-    return jsonify({"message": f"'{movie_name}' added to favorites!"})
-
-@flask_app.route("/api/history/<int:user_id>", methods=["GET"])
-def api_get_history(user_id):
-    """Get user search history."""
-    history = get_user_history(user_id)
-    return jsonify(history)
-
-@flask_app.route("/api/notify", methods=["POST"])
-def api_notify_users():
-    """Notify all users from the web."""
-    data = request.json
-    message = data.get("message")
-
-    if not message:
-        return jsonify({"error": "Message is required"}), 400
-
-    users = users_collection.find()
-    for user in users:
-        try:
-            application.bot.send_message(chat_id=user["user_id"], text=message)
-        except Exception as e:
-            logging.warning(f"Failed to notify user {user['user_id']}: {e}")
-
-    return jsonify({"message": "Notification sent to all users!"})
 
 # Run Flask and Telegram Bot
 if __name__ == "__main__":
