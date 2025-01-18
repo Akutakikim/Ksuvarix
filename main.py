@@ -5,7 +5,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 # Bot configuration
-BOT_TOKEN = "YOUR_BOT_TOKEN"
+BOT_TOKEN = "7652316281:AAH84LXEvmq1GO365vRx8FWhJG2Jz4SydL0"
 MONGO_URI = "mongodb+srv://Zafinet:<Akik20f20varb04>@zafinet.wftow.mongodb.net/?retryWrites=true&w=majority&appName=Zafinet"
 ADMIN_USER_ID = 5912828707  # Replace with your admin Telegram user ID
 BOT_VERSION = "ZATHAIX Bot v-1.3.12"
