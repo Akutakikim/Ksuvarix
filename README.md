@@ -14,16 +14,16 @@
 ---
 
 ## Creator
-- **Name**: *[Your Name]*  
+- **Name**: *[The Shadow Farithas X]*  
 - **Social Links**:  
-  - [Twitter]()  
+  - [Twitter](https://x.com/ShadowFarithasX?t=hJXb3JhurO69_z_usTJd5g&s=09)  
   - 
 
 ---
 
 ## Links
-- **Telegram Bot**: [ZATHAIX Bot]()  
-- **Web App**: [ZATHAIX Web]()
+- **Telegram Bot**: [ZATHAIX Bot](https://t.me/ksuvarix_bot?start=_tgr_WoGT5UgzYmY1)  
+- **Web App**: [ZATHAIX Web](http://t.me/ksuvarix_bot/zawrite)
 
 ---
 
