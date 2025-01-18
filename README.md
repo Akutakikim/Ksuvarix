@@ -1,8 +1,6 @@
-# Ksuvarix
-Ksuvarix bot
- Movie Search Bot & Web App
+# ZATHAIX - Movie Search Bot & Web App
 
-**Ksuvarix** is a Telegram bot and web app that provides movie download links, allows users to save their favorite movies, view their search history, and more.
+**ZATHAIX** is a Telegram bot and web app that provides movie download links, allows users to save their favorite movies, view their search history, and more.
 
 ---
 
@@ -16,16 +14,18 @@ Ksuvarix bot
 ---
 
 ## Creator
-- **Name**: THE SHADOW FARITHAS X
+- **Name**: *[Your Name]*  
 - **Social Links**:  
-  - Telegram  
-  - Twitter
-  - GitHub
+  - [Telegram](https://t.me/YourTelegramUsername)  
+  - [Twitter](https://twitter.com/YourTwitterUsername)  
+  - [GitHub](https://github.com/YourGitHubUsername)
 
 ---
 
 ## Links
-- **Telegram Bot**: KSUVARIX Bot
-- **Web App**: Ksuvarix Web App
+- **Telegram Bot**: [ZATHAIX Bot](https://t.me/YourBotUsername)  
+- **Web App**: [ZATHAIX Web](https://your-web-app-link.com)
 
 ---
+
+Thank you for using ZATHAIX!
