@@ -1,31 +1,30 @@
 import logging
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
 from pymongo import MongoClient
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
-# variables 
-BOT_TOKEN = "7751315434:AAHN7vB3uet6YtHBjlf3agyAdtda0IjYxx4"
-MONGO_URI = "mongodb+srv://Zafinet:<Akik20f20varb04>@zafinet.wftow.mongodb.net/?retryWrites=true&w=majority&appName=Zafinet"
-ADMIN_USER_ID = 5912828707  # Replace with your Telegram user ID (Admin)
 
-# Logging Configuration
+# Bot configuration
+BOT_TOKEN = "YOUR_BOT_TOKEN"
+MONGO_URI = "YOUR_MONGO_URI"
+ADMIN_USER_ID = 5912828707  # Replace with your admin Telegram user ID
+BOT_VERSION = "ZATHAIX Bot v-1.3.12"
+
+# Logging configuration
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-# MongoDB Configuration
+# MongoDB configuration
 client = MongoClient(MONGO_URI)
 db = client["ZATHAIX"]
 movies_collection = db["movies"]
 users_collection = db["users"]
 
-# Flask App for Web API
+# Flask app for API
 flask_app = Flask(__name__)
 
-# Bot Version
-BOT_VERSION = "ZATHAIX Bot v-1.3.12"
-
-# Helper Functions
+# Helper functions
 def register_user(user_id):
-    """Register a user in MongoDB."""
+    """Register a user if not already registered."""
     if not users_collection.find_one({"user_id": user_id}):
         users_collection.insert_one({"user_id": user_id, "favorites": [], "history": []})
 
@@ -34,26 +33,26 @@ def search_movies(query):
     return list(movies_collection.find({"movie": {"$regex": query, "$options": "i"}}))
 
 def add_to_favorites(user_id, movie_name):
-    """Add a movie to the user's favorites."""
+    """Add a movie to user's favorites."""
     users_collection.update_one({"user_id": user_id}, {"$addToSet": {"favorites": movie_name}})
 
 def get_user_favorites(user_id):
-    """Retrieve a user's favorite movies."""
+    """Retrieve user's favorite movies."""
     user = users_collection.find_one({"user_id": user_id})
     return user.get("favorites", []) if user else []
 
 def add_to_history(user_id, query):
-    """Add a query to the user's search history."""
+    """Add a search query to user's history."""
     users_collection.update_one({"user_id": user_id}, {"$push": {"history": query}})
 
 def get_user_history(user_id):
-    """Retrieve a user's search history."""
+    """Retrieve user's search history."""
     user = users_collection.find_one({"user_id": user_id})
     return user.get("history", []) if user else []
 
-# Telegram Bot Handlers
+# Telegram bot handlers
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Start command handler."""
+    """Handle the /start command."""
     user_id = update.message.from_user.id
     register_user(user_id)
 
@@ -74,7 +73,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle movie search queries."""
-    query = update.message.text.strip().lower()
+    query = update.message.text.strip()
     user_id = update.message.from_user.id
     register_user(user_id)
     add_to_history(user_id, query)
@@ -107,24 +106,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"**Rating**: {movie['rating']}\n\n"
                 f"[Download Here]({movie['Terabox']})"
             )
-            keyboard = [[InlineKeyboardButton("⬅️ Back", callback_data="back_to_movies")]]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.message.reply_text(text, parse_mode="Markdown", reply_markup=reply_markup)
+            await query.message.edit_text(text, parse_mode="Markdown")
         else:
-            await query.message.reply_text("Movie not found.")
-
-    elif query.data == "back_to_movies":
-        results = movies_collection.find().limit(10)
-        keyboard = [[InlineKeyboardButton(movie["movie"], callback_data=f"movie_{movie['movie']}")] for movie in results]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.message.reply_text("Select a movie:", reply_markup=reply_markup)
+            await query.message.edit_text("Movie not found.")
+    else:
+        await query.message.edit_text("Invalid action.")
 
 async def show_favorites(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show user's favorite movies."""
     user_id = update.message.from_user.id
     favorites = get_user_favorites(user_id)
     if favorites:
-        await update.message.reply_text("Your favorites:\n" + "\n".join(favorites))
+        await update.message.reply_text("Your favorite movies:\n" + "\n".join(favorites))
     else:
         await update.message.reply_text("You have no favorite movies yet!")
 
@@ -137,19 +130,32 @@ async def show_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("You have no search history yet!")
 
-async def show_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show available commands."""
-    commands_text = (
-        f"Here are the available commands for {BOT_VERSION}:\n\n"
-        "- `/start`: Start the bot.\n"
-        "- `/commands`: Show this command list.\n"
-        "- `/f`: View your favorite movies.\n"
-        "- `/h`: View your search history.\n"
-        "- `/notify`: Admin command to notify all users (admins only).\n"
-    )
-    await update.message.reply_text(commands_text, parse_mode="Markdown")
+async def notify_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Notify all users (admin-only command)."""
+    user_id = update.message.from_user.id
+    if user_id != ADMIN_USER_ID:
+        await update.message.reply_text("You are not authorized to use this command.")
+        return
 
-# Run Flask and Telegram Bot
+    message = " ".join(context.args)
+    if not message:
+        await update.message.reply_text("Please provide a message to notify users.")
+        return
+
+    users = users_collection.find()
+    for user in users:
+        try:
+            await context.bot.send_message(chat_id=user["user_id"], text=message)
+        except Exception as e:
+            logging.warning(f"Failed to send message to user {user['user_id']}: {e}")
+    await update.message.reply_text("Notification sent to all users.")
+
+# Flask route example
+@flask_app.route("/")
+def home():
+    return jsonify({"status": "Bot and API are running", "version": BOT_VERSION})
+
+# Main bot runner
 if __name__ == "__main__":
     from threading import Thread
 
@@ -157,7 +163,7 @@ if __name__ == "__main__":
     flask_thread = Thread(target=lambda: flask_app.run(host="0.0.0.0", port=5000))
     flask_thread.start()
 
-    # Telegram Bot
+    # Telegram bot
     application = ApplicationBuilder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("commands", show_commands))
