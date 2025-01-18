@@ -6,7 +6,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Cal
 
 # Bot configuration
 BOT_TOKEN = "YOUR_BOT_TOKEN"
-MONGO_URI = "YOUR_MONGO_URI"
+MONGO_URI = "mongodb+srv://Zafinet:<Akik20f20varb04>@zafinet.wftow.mongodb.net/?retryWrites=true&w=majority&appName=Zafinet"
 ADMIN_USER_ID = 5912828707  # Replace with your admin Telegram user ID
 BOT_VERSION = "ZATHAIX Bot v-1.3.12"
 
