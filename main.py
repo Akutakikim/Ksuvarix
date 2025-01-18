@@ -3,26 +3,27 @@ from flask import Flask, jsonify, request
 from pymongo import MongoClient
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
+from threading import Thread
 
-# Bot configuration
+# Bot and Database Configuration
 BOT_TOKEN = "7652316281:AAH84LXEvmq1GO365vRx8FWhJG2Jz4SydL0"
 MONGO_URI = "mongodb+srv://Zafinet:<Akik20f20varb04>@zafinet.wftow.mongodb.net/?retryWrites=true&w=majority&appName=Zafinet"
 ADMIN_USER_ID = 5912828707  # Replace with your admin Telegram user ID
 BOT_VERSION = "ZATHAIX Bot v-1.3.12"
 
-# Logging configuration
+# Logging Configuration
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-# MongoDB configuration
+# MongoDB Configuration
 client = MongoClient(MONGO_URI)
 db = client["ZATHAIX"]
 movies_collection = db["movies"]
 users_collection = db["users"]
 
-# Flask app for API
+# Flask App for API
 flask_app = Flask(__name__)
 
-# Helper functions
+# Helper Functions
 def register_user(user_id):
     """Register a user if not already registered."""
     if not users_collection.find_one({"user_id": user_id}):
@@ -50,7 +51,7 @@ def get_user_history(user_id):
     user = users_collection.find_one({"user_id": user_id})
     return user.get("history", []) if user else []
 
-# Telegram bot handlers
+# Telegram Bot Handlers
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /start command."""
     user_id = update.message.from_user.id
@@ -150,23 +151,20 @@ async def notify_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logging.warning(f"Failed to send message to user {user['user_id']}: {e}")
     await update.message.reply_text("Notification sent to all users.")
 
-# Flask route example
+# Flask Route Example
 @flask_app.route("/")
 def home():
     return jsonify({"status": "Bot and API are running", "version": BOT_VERSION})
 
-# Main bot runner
+# Main Bot Runner
 if __name__ == "__main__":
-    from threading import Thread
-
-    # Flask app in a separate thread
+    # Run Flask App in a Separate Thread
     flask_thread = Thread(target=lambda: flask_app.run(host="0.0.0.0", port=5000))
     flask_thread.start()
 
-    # Telegram bot
+    # Run Telegram Bot
     application = ApplicationBuilder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("commands", show_commands))
     application.add_handler(CommandHandler("f", show_favorites))
     application.add_handler(CommandHandler("h", show_history))
     application.add_handler(CommandHandler("notify", notify_users))
