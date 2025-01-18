@@ -1,0 +1,2 @@
+web: gunicorn main:flask_app -b 0.0.0.0:$PORT
+worker: python main.py
