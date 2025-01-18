@@ -16,15 +16,14 @@
 ## Creator
 - **Name**: *[Your Name]*  
 - **Social Links**:  
-  - [Telegram](https://t.me/YourTelegramUsername)  
-  - [Twitter](https://twitter.com/YourTwitterUsername)  
-  - [GitHub](https://github.com/YourGitHubUsername)
+  - [Twitter]()  
+  - 
 
 ---
 
 ## Links
-- **Telegram Bot**: [ZATHAIX Bot](https://t.me/YourBotUsername)  
-- **Web App**: [ZATHAIX Web](https://your-web-app-link.com)
+- **Telegram Bot**: [ZATHAIX Bot]()  
+- **Web App**: [ZATHAIX Web]()
 
 ---
 
